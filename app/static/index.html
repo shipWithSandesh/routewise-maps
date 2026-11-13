@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RouteWise</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+body{font-family:system-ui,sans-serif;margin:0}
+header{background:#1a73e8;color:#fff;padding:14px 20px;font-size:22px;font-weight:700}
+.panel{padding:14px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+select,button{padding:9px;border-radius:6px;border:1px solid #ccc}
+button{background:#1a73e8;color:#fff;border:0}
+#map{height:420px}
+#result{padding:0 20px;font-size:17px}#error{color:#c00;padding:0 20px}
+</style></head>
+<body><header>🗺️ RouteWise · Bengaluru</header>
+<div class="panel">
+  <select id="from" aria-label="From"></select> → <select id="to" aria-label="To"></select>
+  <select id="optimise" aria-label="Optimise"><option value="time">Fastest</option><option value="distance">Shortest</option></select>
+  <button id="go">Find route</button>
+</div>
+<div id="result" data-testid="result"></div><div id="error" data-testid="error"></div>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+let map = null, line = null;
+if (window.L) {
+  map = L.map("map").setView([12.97, 77.62], 11);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {attribution: "© OpenStreetMap"}).addTo(map);
+}
+fetch("/api/places").then(r => r.json()).then(places => {
+  const opts = places.map(p => `<option>${p.name}</option>`).join("");
+  $("#from").innerHTML = opts; $("#to").innerHTML = opts;
+  if (map) places.forEach(p => L.marker([p.lat, p.lng]).addTo(map).bindTooltip(p.name));
+});
+$("#go").onclick = async () => {
+  $("#error").textContent = ""; $("#result").textContent = "";
+  const q = new URLSearchParams({from: $("#from").value, to: $("#to").value, optimise: $("#optimise").value});
+  const r = await fetch("/api/route?" + q); const body = await r.json();
+  if (!r.ok) { $("#error").textContent = body.detail; return; }
+  $("#result").innerHTML = `<b>${body.distance_km} km</b> · <b>${body.eta_min} min</b><br>Via: <span id="path">${body.path.join(" → ")}</span>`;
+  if (map) { if (line) map.removeLayer(line); line = L.polyline(body.coords, {color: "#1a73e8", weight: 6}).addTo(map); map.fitBounds(line.getBounds()); }
+};
+</script></body></html>
