@@ -1,6 +1,6 @@
 # 🗺️ RouteWise — Maps Route Finder
 
-![CI](https://github.com/Sandesh7777777/routewise-maps/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/shipWithSandesh/routewise-maps/actions/workflows/ci.yml/badge.svg)
 
 A Google-Maps-style route finder for Bengaluru: pick two places and get the **fastest** or **shortest** route on a live Leaflet map, with ETA and road-closure rerouting.
 
